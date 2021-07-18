@@ -1,0 +1,4 @@
+*.save
+*.bin
+/__pycache__
+/venv
