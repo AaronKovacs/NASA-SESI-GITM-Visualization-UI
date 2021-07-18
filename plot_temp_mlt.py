@@ -124,7 +124,7 @@ def plot_temp_mlt(gitm, altset, latslow, latshigh, lonlow, lonhigh, gtimelow, gt
 
     fig.subplots_adjust(right=0.80)
     cbar_ax=fig.add_axes([0.85,0.35,0.02,0.3])
-    cbar=fig.colorbar(m,cax=cbar_ax)
+    cbar=fig.colorbar(m,cax=cbar_ax, orientation='horizontal')
     cbar.set_label('mhos')
 
 

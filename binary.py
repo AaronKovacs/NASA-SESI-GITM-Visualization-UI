@@ -96,34 +96,45 @@ while True:
 		MAX_ALT = len(temps[0][0])
 		MIN_ALT = 0
 
-		val = input("Altitude (Available 0-%s): " % (MAX_ALT))
-		altset = int(val)
-
-		if altset > MAX_ALT:
-			altset = MAX_ALT
+		val = input("Altitude (Available 0-%s) [Plot multiple seperated by \',\']: " % (MAX_ALT))
+		coms = val.split(',')
+		alts = []
+		for com in coms:
+			alts.append(int(com))
+		print(alts)
 		
-		newtemps = []
-		for a1 in temps:
-			n = []
-			for a2 in a1:
-				n.append(a2[altset])
-			newtemps.append(n)
+		def plotCoords(data, alt):
+			Z = []
+			for a1 in data:
+				n = []
+				for a2 in a1:
+					n.append(a2[alt])
+				Z.append(n)
 
-		y = np.linspace(0, len(temps), len(temps))
-		x = np.linspace(0, len(temps[0]), len(temps[0]))
+			y = np.linspace(0, len(data), len(data))
+			x = np.linspace(0, len(data[0]), len(data[0]))
 
-		X, Y = np.meshgrid(x, y)
+			X, Y = np.meshgrid(x, y)
+			return X, Y, Z
 
-		# Clear plot
 		plt.clf()
-		plt.title('Plot %s (Z= %s)' % (key, altset))
-		plt.xlabel("Latitude")
-		plt.ylabel("Longitude")
-		contour = plt.contourf(X, Y, newtemps, 20, cmap=cmap);
-		cbar = plt.colorbar(contour)
-		cbar.ax.set_ylabel(key)
+		fig, axs = plt.subplots(len(alts), figsize=(5,3 * len(alts)))
+		fig.suptitle('Plot %s' % (key))
+		
+		for i in range(len(alts)):
 
-		plt.savefig('demo.png',dpi=300)
+			X, Y, Z = plotCoords(temps, alts[i])
+			
+			axs[i].set_title('Z= %s' % (alts[i]))
+			axs[i].set(xlabel='Latitude', ylabel='Longitude')
+			contour = axs[i].contourf(X, Y, Z, 20, cmap=cmap);
+			cbar = fig.colorbar(contour, ax=axs[i])
+			cbar.ax.set_ylabel(key)
+		
+		fig.tight_layout()
+		
+		
+		fig.savefig('demo.png',dpi=300)
 
 		image = Image.open('demo.png')
 		image.show()
