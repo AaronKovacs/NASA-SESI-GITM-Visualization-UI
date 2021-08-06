@@ -2,3 +2,6 @@
 *.bin
 /__pycache__
 /venv
+/plot_video/*
+*.jpg
+*.png
