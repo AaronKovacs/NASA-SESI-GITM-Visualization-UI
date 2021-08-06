@@ -36,10 +36,42 @@ while True:
 	print('=================================')
 	print('Selected Key: %s' % (key))
 
-	def contourVideo(data):
+	def flatten3D(data, alt):
+			Z = []
+			for a1 in data:
+				n = []
+				for a2 in a1:
+					n.append(a2[alt])
+				Z.append(n)
+			return Z
+
+	def contourVideo(flat, data):
 		folder = 'plot_video'
 		MAX_ALT = len(data[0][0])
 		images = []
+
+		fvmax = 0
+		for i in range(MAX_ALT):
+			newtemps = []
+			for a1 in data:
+				n = []
+				for a2 in a1:
+					n.append(a2[i])
+				newtemps.append(n)
+			if np.max(newtemps) > fvmax:
+				fvmax = np.max(newtemps)
+
+		fvmin = 0
+		for i in range(MAX_ALT):
+			newtemps = []
+			for a1 in data:
+				n = []
+				for a2 in a1:
+					n.append(a2[i])
+				newtemps.append(n)
+			if np.min(newtemps) < fvmin:
+				fvmin = np.min(newtemps)
+
 		for i in range(MAX_ALT):
 			newtemps = []
 			for a1 in data:
@@ -53,12 +85,21 @@ while True:
 			X, Y = np.meshgrid(x, y)
 			plt.clf()
 			plt.title('Plot %s (Z= %s)' % (key, i))
-			plt.xlabel("Latitude")
-			plt.ylabel("Longitude")
-			contour = plt.contourf(X, Y, newtemps, 20, cmap=cmap);
-			cbar = plt.colorbar(contour)
-			cbar.ax.set_ylabel(key)
-			plt.savefig(folder + "/file%02d.png" % i)
+			plt.xlabel("Longitude")
+			plt.ylabel("Latitude")
+
+
+			
+			if flat:
+				contour = plt.contourf(flatten3D(gitm['Longitude'], i), flatten3D(gitm['Latitude'], i), newtemps, 20, cmap=cmap, vmin=fvmin, vmax=fvmax);
+				plt.clim(fvmin, fvmax)
+				cbar = plt.colorbar(contour)
+				cbar.ax.set_ylabel(key)
+				plt.savefig(folder + "/file%02d.png" % i)
+			else:
+				ax = plt.axes(projection='3d')
+				contour = ax.contourf(flatten3D(gitm['Longitude'], i), flatten3D(gitm['Latitude'], i), newtemps, 20, cmap=cmap, vmin=fvmin, vmax=fvmax, rstride=1, cstride=1, edgecolor='none', extend3d=True);
+				plt.savefig(folder + "/file%02d.png" % i)
 
 		os.chdir(folder)
 		subprocess.call([
@@ -87,10 +128,13 @@ while True:
 		cmap = 'Spectral_r'
 	print('Selected colormap: %s' % cmap)
 
-	val = input("Type of plot:\n  1. Contour\n  2. Contour Video\nSelect: ")
+	val = input("Type of plot:\n  1. Contour\n  2. Contour Video\n  3. 3D Contour Video\nSelect: ")
 	if val == '2':
 		print('Generating video...')
-		contourVideo(temps)
+		contourVideo(True, temps)
+	elif val == '3':
+		print('Generating video...')
+		contourVideo(False, temps)
 	else:
 		altset = 0
 		MAX_ALT = len(temps[0][0])
@@ -114,6 +158,14 @@ while True:
 			y = np.linspace(0, len(data), len(data))
 			x = np.linspace(0, len(data[0]), len(data[0]))
 
+			'''
+			for i in y:
+				index = y.index(i)
+				for l in i:
+					index2 = i.index(l)
+					y[index][index2] = gitm['Longitude'][index][index2]
+			'''
+
 			X, Y = np.meshgrid(x, y)
 			return X, Y, Z
 
@@ -126,8 +178,9 @@ while True:
 			X, Y, Z = plotCoords(temps, alts[i])
 			
 			axs[i].set_title('Z= %s' % (alts[i]))
-			axs[i].set(xlabel='Latitude', ylabel='Longitude')
-			contour = axs[i].contourf(X, Y, Z, 20, cmap=cmap);
+			axs[i].set(xlabel='Longitude', ylabel='Latitude')
+
+			contour = axs[i].contourf(flatten3D(gitm['Longitude'], alts[i]), flatten3D(gitm['Latitude'], alts[i]), Z, 20, cmap=cmap);
 			cbar = fig.colorbar(contour, ax=axs[i])
 			cbar.ax.set_ylabel(key)
 		
@@ -138,6 +191,8 @@ while True:
 
 		image = Image.open('demo.png')
 		image.show()
+
+		plt.cla()
 
 	print('=================================')
 	inp = input("Plot again? (y/n): ")
